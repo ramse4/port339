@@ -60,16 +60,16 @@ if ($view eq "sbfc"){
 }
 if ($view eq "er"){
 	print h3("ER Diagram"),
-		img({-src => 'cow2.jpg',  
+		img({-src => 'er_diagram.jpg',  
    		-alt => 'Cannot find image'});
 }
 if ($view eq "relational"){
 	print h3("Relational Design"),
-		img({-src => 'cow.jpg',  
+		img({-src => 'relations.jpg',  
    			-alt => 'Cannot find image'});
 }
 if ($view eq "sqlddl"){
-	open FILE, "elect.sql" or die $!;
+	open FILE, "setupdb.sql" or die $!;
 	print h3("SQL DDL");
 	print "<pre class=\"pre-scrollable\">";
 	while (<FILE>) {
