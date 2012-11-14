@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-#login.pl
+#portfolios.pl
 #
 #
 # The combination of -w and use strict enforces various 
@@ -57,7 +57,6 @@ my $user = undef;
 my $password = undef;
 my $logincomplain=0;
 
-my $run;
 if (defined($inputcookiecontent)) { 
   # Has cookie, let's decode it
   ($user,$password) = split(/\//,$inputcookiecontent);
@@ -66,40 +65,6 @@ if (defined($inputcookiecontent)) {
   # No cookie, treat as anonymous user
   ($user,$password) = ("anon","anonanon");
 }
-
-if (defined(param("run"))) { 
-    $run = param("run") == 1;
- } 
- else {
-    $run = 0;
- }
-
-if ($run) { 
-    #
-    # Login attempt
-    #
-    # Ignore any input cookie.  Just validate user and
-    # generate the right output cookie, if any.
-    #
-    ($user,$password) = (param('user'),param('password'));
-    if (ValidUser($user,$password)) { 
-
-      # if the user's info is OK, then give him a cookie
-      # that contains his username and password 
-      # the cookie will expire in one hour, forcing him to log in again
-      # after one hour of inactivity.
-      # Also, land him in the base query screen
-      $outputcookiecontent=join("/",$user,$password);
-      $run = 0;
-    } else {
-      # uh oh.  Bogus login attempt.  Make him try again.
-      # don't give him a cookie
-      $logincomplain=1;  
-      $run = 0;
-    }
-}
-
-  ($user,$password) = split(/\//,$outputcookiecontent);
 
 my @outputcookies;
 
@@ -116,68 +81,44 @@ if (defined($outputcookiecontent)) {
 		    -value=>$outputcookiecontent,
 		    -expires=>($deletecookie ? '-1h' : '+1h'));
   push @outputcookies, $cookie;
-
 } 
 
- 
+
+#
 # Headers and cookies sent back to client
 #
 # The page immediately expires so that it will be refetched if the
 # client ever needs to update it
 #
-if (ValidUser($user, $password)){
-	print redirect(-uri=>'portfolios.pl', -cookie=>\@outputcookies);
-}else{
 print header(-expires=>'now', -cookie=>\@outputcookies);
-
 
 print "<html>";
 print "<head>";
-print "<title>Portfolio Login</title>";
+print "<title>Portfolios</title>";
 print "</head>";
 
 print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
+
+print "<div style= \"border-bottom:2px ridge black\">" ,
+	h2("Portfolios"),
+	"</div>";
+
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:300px; padding-left:10px;\">";
+	margin:100px auto; width:500px; padding-top:10px; padding-left:10px;\">";
 
+print "<a href=\"createPort.pl\" class=\"btn btn-primary\"> Create Portfolio</a>",p,p;
 
-if ($logincomplain){
-	print "<h5 style=\"color:red\">Login Failed. Try Again.<p><h5>", hr;
+print "<table class=\"table\"> <tbody>";
+
+foreach my $port("portName", "portName2"){
+	print "<tr> <td><a href=\"port.pl?name=$port\"> $port </a> </td> 
+		<td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
 }
-print start_form(-name=>"Login"),
-    h3('Login to Your Portfolio'),
-	"Username: ",textfield(-name=>'user'),	p,
-	"Password: ",password_field(-name=>'password'),p,
-	hidden(-name=>'run',default=>['1']),
-	"<center>", submit(-class=>'btn', -name=>'Login'),p,p,
-	"<a href=\"register.pl\">
-	<strong>Register Account</strong> </a>",
-	"</center>",
-	end_form;
+
+print "</tbody> </table>";
+
 print "</div>";
 
-
-print "<footer style=\"position:absolute;bottom:0;
-	width:100\%; height:100px; background-color:#000000;\">", "<center>",
-	"<a href=\"handins.pl?view=sbfc\"><strong>View Storyboard/FlowChart</strong> </a>",
-	p,"<a href=\"handins.pl?view=er\"><strong>View E/R Diagram</strong> </a>",
-	"<br/>","<a href=\"handins.pl?view=relational\"><strong>View Relational Design</strong> </a>",
-	"<br/>","<a href=\"handins.pl?view=sqlddl\"><strong>View SQL DDL Code</strong> </a>",
-	"<br/>","<a href=\"handins.pl?view=sqldmldql\"><strong>View SQL DML/DQL Code</strong> </a>",
-	"</center>", "</footer>";
-
 print end_html;
-}
-
-
-sub ValidUser{
-	my ($name, $pass)= @_;
-	if ($name eq "Ross"){
-		return 1;
-	}
-	else{
-		return 0;
-	}
-}

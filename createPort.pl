@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-#register.pl
+#createPort.pl
 #
 #
 # The combination of -w and use strict enforces various 
@@ -28,6 +28,7 @@ use CGI qw(:standard);
 use DBI;
 #
 #
+#
 # A module that makes it easy to parse relatively freeform
 # date strings into the unix epoch time (seconds since 1970)
 #
@@ -39,56 +40,37 @@ use Time::ParseDate;
 my $dbuser="rhf687";
 my $dbpasswd="Yoe53chN";
 
-my $run;
+my $cookiename="PortSession";
 
-if (defined(param("run"))) { 
-    $run = param("run") == 1;
- } 
- else {
-    $run = 0;
- }
+my $inputcookiecontent = cookie($cookiename);
 
-#
-# Headers and cookies sent back to client
-#
-# The page immediately expires so that it will be refetched if the
-# client ever needs to update it
-#
 print header();
 
 print "<html>";
 print "<head>";
 print "<META HTTP-EQUIV=Refresh CONTENT=\"5; URL=portfolios.pl\">";
-print "<title>Portfolio Registration</title>";
+print "<title>Portfolio</title>";
 print "</head>";
 
-print "<body style=\"height:auto;margin:0\">";
+print "<body style=\"height:auto; margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:300px; padding-left:10px;\">";
-if(!$run){
-	print start_form(-name=>'Register'),
-	    h3('Register Account'),
-	    "Username: ", textfield(-name=>'name'),p,
-	    "Password: ", password_field(-name=>'password'),"<br/>", 
-	    hidden(-name=>'run',-default=>['1']), "<center>",
-	    submit(-class=>'btn', -name=>'Register'), "</center>",
-	    end_form;
-	 
-	}
-else{
-	my $name = param("name");
-	my $password = param("password");
-	print "Registration sucessful!<br />";
-}
+
+print h3("Create Portfolio"), p,
+	"<strong>Portfolio Name: </strong>",textfield(-name=>'name'),p,
+	"<strong>Initial Cash Amount: </strong>", textfield(-name=>'cash'),
+	hidden(-name=>'run',default=>['1']),
+	"<center><strong>", submit(-class=>'btn btn-primary', -name=>'Add Portfolio'),p, "</strong></center>";
+
 print "</div>";
+
 
 print "<footer style=\"position:absolute;bottom:0;
 	width:100\%; height:30px; background-color:#000000;\">",
-	"<a href=\"login.pl\"><strong>Return to Login</strong> </a>",
+	"<a href=\"portfolios.pl\"><strong>Return to Portfolios</strong> </a>",
 	"</footer>";
-
 
 print end_html;
