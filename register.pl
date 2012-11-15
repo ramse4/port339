@@ -36,31 +36,8 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-
-
 my $dbuser="rhf687";
 my $dbpasswd="Yoe53chN";
-
-
-BEGIN {
-  $ENV{PORTF_DBMS}="oracle";
-  $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
-
-  unless ($ENV{BEGIN_BLOCK}) {
-    use Cwd;
-    $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";
-    $ENV{ORACLE_HOME}=$ENV{ORACLE_BASE}."/db_1";
-    $ENV{ORACLE_SID}="CS339";
-    $ENV{LD_LIBRARY_PATH}=$ENV{ORACLE_HOME}."/lib";
-    $ENV{BEGIN_BLOCK} = 1;
-    exec 'env',cwd().'/'.$0,@ARGV;
-  }
-};
-
-use stock_data_access;
-
 
 my $run;
 
@@ -81,7 +58,7 @@ print header();
 
 print "<html>";
 print "<head>";
-#print "<META HTTP-EQUIV=Refresh CONTENT=\"5; URL=portfolios.pl\">";
+print "<META HTTP-EQUIV=Refresh CONTENT=\"5; URL=portfolios.pl\">";
 print "<title>Portfolio Registration</title>";
 print "</head>";
 
@@ -104,13 +81,7 @@ if(!$run){
 else{
 	my $name = param("name");
 	my $password = param("password");
-	my $error = register($name, $password);
-	if ($error){
-		print $error;
-	}
-	else{
-		print "Registration sucessful!<br />";
-	}
+	print "Registration sucessful!<br />";
 }
 print "</div>";
 
@@ -121,9 +92,3 @@ print "<footer style=\"position:absolute;bottom:0;
 
 
 print end_html;
-
-sub register{
-	eval{ExecStockSQL(undef, "insert into users values(?,?,\'freedom\')", @_)};
-	return $@;
-}
-
