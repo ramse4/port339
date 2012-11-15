@@ -40,6 +40,25 @@ use Time::ParseDate;
 my $dbuser="rhf687";
 my $dbpasswd="Yoe53chN";
 
+BEGIN {
+  $ENV{PORTF_DBMS}="oracle";
+  $ENV{PORTF_DB}="cs339";
+  $ENV{PORTF_DBUSER}="rhf687";
+  $ENV{PORTF_DBPASS}="Yoe53chN";
+
+  unless ($ENV{BEGIN_BLOCK}) {
+    use Cwd;
+    $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";
+    $ENV{ORACLE_HOME}=$ENV{ORACLE_BASE}."/db_1";
+    $ENV{ORACLE_SID}="CS339";
+    $ENV{LD_LIBRARY_PATH}=$ENV{ORACLE_HOME}."/lib";
+    $ENV{BEGIN_BLOCK} = 1;
+    exec 'env',cwd().'/'.$0,@ARGV;
+  }
+};
+
+use stock_data_access;
+
 my $cookiename="PortSession";
 
 
@@ -98,9 +117,9 @@ if ($run) {
       $run = 0;
     }
 }
-
+if (defined($outputcookiecontent)) { 
   ($user,$password) = split(/\//,$outputcookiecontent);
-
+}
 my @outputcookies;
 
 #
@@ -174,10 +193,12 @@ print end_html;
 
 sub ValidUser{
 	my ($name, $pass)= @_;
-	if ($name eq "Ross"){
-		return 1;
+  my @col;
+	eval {@col=ExecStockSQL("COL", "select count(*) from users where userid=? and password=?", $name, $password)};
+	if ($@){	
+    return 0;
 	}
-	else{
-		return 0;
-	}
+  else{
+    return $col[0]>0;
+  }
 }
