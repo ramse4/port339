@@ -34,21 +34,53 @@ use DBI;
 #
 use Time::ParseDate;
 
+my $run;
+
+if (defined(param("run"))) { 
+    $run = param("run") == 1;
+ } 
+ else {
+    $run = 0;
+ }
 #
 # You need to override these for access to your database
 #
 my $dbuser="rhf687";
 my $dbpasswd="Yoe53chN";
 
+BEGIN {
+  $ENV{PORTF_DBMS}="oracle";
+  $ENV{PORTF_DB}="cs339";
+  $ENV{PORTF_DBUSER}="rhf687";
+  $ENV{PORTF_DBPASS}="Yoe53chN";
+
+  unless ($ENV{BEGIN_BLOCK}) {
+    use Cwd;
+    $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";
+    $ENV{ORACLE_HOME}=$ENV{ORACLE_BASE}."/db_1";
+    $ENV{ORACLE_SID}="CS339";
+    $ENV{LD_LIBRARY_PATH}=$ENV{ORACLE_HOME}."/lib";
+    $ENV{BEGIN_BLOCK} = 1;
+    exec 'env',cwd().'/'.$0,@ARGV;
+  }
+};
+
+use stock_data_access;
+
 my $cookiename="PortSession";
 
 my $inputcookiecontent = cookie($cookiename);
+my $user;
+my $password;
+($user,$password) = split(/\//,$inputcookiecontent);
+
+
+
 
 print header();
 
 print "<html>";
 print "<head>";
-print "<META HTTP-EQUIV=Refresh CONTENT=\"5; URL=portfolios.pl\">";
 print "<title>Portfolio</title>";
 print "</head>";
 
@@ -59,12 +91,28 @@ print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:300px; padding-left:10px;\">";
 
-print h3("Create Portfolio"), p,
-	"<strong>Portfolio Name: </strong>",textfield(-name=>'name'),p,
-	"<strong>Initial Cash Amount: </strong>", textfield(-name=>'cash'),
-	hidden(-name=>'run',default=>['1']),
-	"<center><strong>", submit(-class=>'btn btn-primary', -name=>'Add Portfolio'),p, "</strong></center>";
+if(!$run){
+	print start_form(-name=>"CreatePortfolio"),
+		h3("Create Portfolio"), p,
+		"<strong>Portfolio Name: </strong>",textfield(-name=>'name'),p,
+		"<strong>Initial Cash Amount: </strong>", "<br/>","\$", textfield(-name=>'cash'),
+		hidden(-name=>'run',default=>['1']),
+		"<center><strong>", submit(-class=>'btn btn-primary', -name=>'Add Portfolio'),p, 
+		"</strong></center>",
+		end_form;
+}
+else{
+	my $name = param("name");
+	my $cash = param("cash");
 
+	my $error = AddPort($name, $cash, $user);
+	if ($error){
+		print $error;
+	}
+	else{
+		print "$name Portfolio Created!";
+	}
+}
 print "</div>";
 
 
@@ -74,3 +122,8 @@ print "<footer style=\"position:absolute;bottom:0;
 	"</footer>";
 
 print end_html;
+
+sub AddPort{
+	eval{ExecStockSQL(undef, "insert into portfolios (name, cash, owner) values(?,?, ?)", @_)};
+	return $@;
+}

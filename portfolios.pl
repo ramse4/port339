@@ -118,23 +118,36 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
-print "<div style= \"border-bottom:2px ridge black\">" ,
-	h2("Portfolios"),
-	"</div>";
+
+
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:500px; padding:10px;\">";
+print "<div style= \"border-bottom:2px ridge black\">" ,
+  h2($user."\'s portfolios"), 
+  "</div>";
 
-print "<a href=\"createPort.pl\" class=\"btn btn-primary\">  Create Portfolio</a>",p,p;
 
 print "<table class=\"table\"> <tbody>";
+my @ports = GetPorts($user);
+my $i;
 
-foreach my $port("portName", "portName2"){
-	print "<tr> <td><a href=\"port.pl?name=$port\"> $port </a> </td> 
-		<td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
+foreach my $port(@ports){
+  $i++;
+  if ($i % 2){
+    print "<tr>";
+  }
+  else{
+    print "<tr class=\"info\">";
+  }
+  print  "<td><a href=\"port.pl?name=$port\"> $port </a> </td> 
+    <td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
 }
 
+
 print "</tbody> </table>";
+
+print "<a href=\"createPort.pl\" class=\"btn btn-primary\">  Create Portfolio</a>";
 
 print "</div>";
 
@@ -142,6 +155,12 @@ print end_html;
 
 
 sub GetPorts{
-	my @col;
-	eval {@col=ExecStockSQL("COL", "select name from portfolios where owner=?", $_)};
+	my ($user)=@_;
+  my @row;
+	eval {@row=ExecStockSQL("COL", "select name from portfolios where owner=?", $user)};
+  if ($@) { 
+    return undef;
+  } else {
+    return @row;
+  }
 }
