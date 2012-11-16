@@ -27,15 +27,36 @@ create table users
 create table portfolios
 (
  ID number not null primary key,
- CASH number not null,
+ NAME varchar(50) not null,
+ CASH number default 0 not null,
  OWNER varchar(32),
- foreign key (OWNER) references users
+ foreign key (OWNER) references users,
+ CONSTRAINT combo_unique UNIQUE(NAME, OWNER)
 );
+
 
 create table holdings
 (
  SYMBOL char(16) not null,
  PORTFOLIOID number not null,
  COUNT number not null,
- foreign key (PORTFOLIOID) references portfolios
+ foreign key (PORTFOLIOID) references portfolios 
 );
+
+
+--increments portfolio id with each insert
+CREATE SEQUENCE test_sequence
+START WITH 1
+INCREMENT BY 1;
+
+CREATE OR REPLACE TRIGGER inc_id
+BEFORE INSERT
+ON portfolios
+REFERENCING NEW AS NEW
+FOR EACH ROW
+BEGIN
+SELECT test_sequence.nextval INTO :NEW.ID FROM dual;
+END;
+/
+
+commit;

@@ -42,7 +42,24 @@ my $dbpasswd="Yoe53chN";
 
 my $cookiename="PortSession";
 
+BEGIN {
+  $ENV{PORTF_DBMS}="oracle";
+  $ENV{PORTF_DB}="cs339";
+  $ENV{PORTF_DBUSER}="rhf687";
+  $ENV{PORTF_DBPASS}="Yoe53chN";
 
+  unless ($ENV{BEGIN_BLOCK}) {
+    use Cwd;
+    $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";
+    $ENV{ORACLE_HOME}=$ENV{ORACLE_BASE}."/db_1";
+    $ENV{ORACLE_SID}="CS339";
+    $ENV{LD_LIBRARY_PATH}=$ENV{ORACLE_HOME}."/lib";
+    $ENV{BEGIN_BLOCK} = 1;
+    exec 'env',cwd().'/'.$0,@ARGV;
+  }
+};
+
+use stock_data_access;
 #
 # Get the session input and debug cookies, if any
 #
@@ -101,24 +118,49 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
-print "<div style= \"border-bottom:2px ridge black\">" ,
-	h2("Portfolios"),
-	"</div>";
+
+
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:500px; padding-top:10px; padding-left:10px;\">";
+	margin:100px auto; width:500px; padding:10px;\">";
+print "<div style= \"border-bottom:2px ridge black\">" ,
+  h2($user."\'s portfolios"), 
+  "</div>";
 
-print "<a href=\"createPort.pl\" class=\"btn btn-primary\"> Create Portfolio</a>",p,p;
 
 print "<table class=\"table\"> <tbody>";
+my @ports = GetPorts($user);
+my $i;
 
-foreach my $port("portName", "portName2"){
-	print "<tr> <td><a href=\"port.pl?name=$port\"> $port </a> </td> 
-		<td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
+foreach my $port(@ports){
+  $i++;
+  if ($i % 2){
+    print "<tr>";
+  }
+  else{
+    print "<tr class=\"info\">";
+  }
+  print  "<td><a href=\"port.pl?name=$port\"> $port </a> </td> 
+    <td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
 }
 
+
 print "</tbody> </table>";
+
+print "<a href=\"createPort.pl\" class=\"btn btn-primary\">  Create Portfolio</a>";
 
 print "</div>";
 
 print end_html;
+
+
+sub GetPorts{
+	my ($user)=@_;
+  my @row;
+	eval {@row=ExecStockSQL("COL", "select name from portfolios where owner=?", $user)};
+  if ($@) { 
+    return undef;
+  } else {
+    return @row;
+  }
+}
