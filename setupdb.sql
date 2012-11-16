@@ -28,7 +28,7 @@ create table portfolios
 (
  ID number not null primary key,
  NAME varchar(50) not null,
- CASH number default 0 not null,
+ CASH number not null,
  OWNER varchar(32),
  foreign key (OWNER) references users,
  CONSTRAINT combo_unique UNIQUE(NAME, OWNER)

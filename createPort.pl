@@ -77,7 +77,12 @@ my $password;
 
 
 
-print header();
+if (defined($user)){
+  print header();
+}
+else{
+  print redirect(-uri=>'login.pl');
+}
 
 print "<html>";
 print "<head>";

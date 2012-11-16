@@ -68,38 +68,12 @@ my $inputcookiecontent = cookie($cookiename);
 #
 # Will be filled in as we process the cookies and paramters
 #
-my $outputcookiecontent = undef;
 my $deletecookie=0;
 my $user = undef;
 my $password = undef;
-my $logincomplain=0;
 
-if (defined($inputcookiecontent)) { 
-  # Has cookie, let's decode it
-  ($user,$password) = split(/\//,$inputcookiecontent);
-  $outputcookiecontent = $inputcookiecontent;
-} else {
-  # No cookie, treat as anonymous user
-  ($user,$password) = ("anon","anonanon");
-}
 
-my @outputcookies;
-
-#
-# OK, so now we have user/password
-# and we *may* have an output cookie.   If we have a cookie, we'll send it right 
-# back to the user.
-#
-# We force the expiration date on the generated page to be immediate so
-# that the browsers won't cache it.
-#
-if (defined($outputcookiecontent)) { 
-  my $cookie=cookie(-name=>$cookiename,
-		    -value=>$outputcookiecontent,
-		    -expires=>($deletecookie ? '-1h' : '+1h'));
-  push @outputcookies, $cookie;
-} 
-
+($user,$password) = split(/\//,$inputcookiecontent);
 
 #
 # Headers and cookies sent back to client
@@ -107,7 +81,12 @@ if (defined($outputcookiecontent)) {
 # The page immediately expires so that it will be refetched if the
 # client ever needs to update it
 #
-print header(-expires=>'now', -cookie=>\@outputcookies);
+if (defined($user)){
+  print header();
+}
+else{
+  print redirect(-uri=>'login.pl');
+}
 
 print "<html>";
 print "<head>";
@@ -122,13 +101,13 @@ print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:500px; padding:10px;\">";
+	margin:100px auto; width:400px; padding:10px;\">";
 print "<div style= \"border-bottom:2px ridge black\">" ,
   h2($user."\'s portfolios"), 
   "</div>";
 
 
-print "<table class=\"table\"> <tbody>";
+print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 my @ports = GetPorts($user);
 my $i;
 
