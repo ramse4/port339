@@ -65,15 +65,20 @@ use stock_data_access;
 #
 my $inputcookiecontent = cookie($cookiename);
 
-#
-# Will be filled in as we process the cookies and paramters
-#
-my $deletecookie=0;
 my $user = undef;
 my $password = undef;
+my $delete;
 
 
 ($user,$password) = split(/\//,$inputcookiecontent);
+
+if (defined(param('delete'))){
+  $delete = param("delete");
+  deletePort($user, $delete);
+}
+else{
+  $delete = undef;
+}
 
 #
 # Headers and cookies sent back to client
@@ -82,6 +87,9 @@ my $password = undef;
 # client ever needs to update it
 #
 if (defined($user)){
+  if (defined($delete)){
+    print redirect(-uri=>'portfolios.pl');
+  }
   print header();
 }
 else{
@@ -97,15 +105,17 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
-
+print "<div style=\"position:absolute;top:0;
+  width:100\%; height:30px; background-color:#eeee00; left:0; z-index:999;\">", 
+  "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
+  "</div>";
 
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:400px; padding:10px;\">";
 print "<div style= \"border-bottom:2px ridge black\">" ,
-  h2($user."\'s portfolios"), 
+  h2($user."\'s portfolios"),
   "</div>";
-
 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 my @ports = GetPorts($user);
@@ -120,7 +130,7 @@ foreach my $port(@ports){
     print "<tr class=\"info\">";
   }
   print  "<td><a href=\"port.pl?name=$port\"> $port </a> </td> 
-    <td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
+    <td><a href=\"portfolios.pl?delete=$port\" class=\"button btn btn-danger\">Delete Portfolio</a> </td></tr>";
 }
 
 
@@ -142,4 +152,10 @@ sub GetPorts{
   } else {
     return @row;
   }
+}
+
+sub deletePort{
+  my ($user, $port)=@_;
+  eval {ExecStockSQL(undef, "delete from portfolios where owner=? and name=?", $user, $port)};
+  return $@;
 }

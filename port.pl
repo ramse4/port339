@@ -73,13 +73,13 @@ if (defined(param("withdraw"))) {
 else {
     $withdraw = 0;
 }
-    if (defined(param("deposit"))) { 
+if (defined(param("deposit"))) { 
       $amount = param("amount2"); 
       $deposit = param("deposit") == 1;
-    } 
-    else {
+} 
+else {
       $deposit = 0;
-    }
+}
 
 
 my $port = param("name");
@@ -90,7 +90,9 @@ my $port = param("name");
 my $inputcookiecontent = cookie($cookiename);
 my $user;
 my $password;
+
 ($user,$password) = split(/\//,$inputcookiecontent);
+
 my $error;
 my @portID = getPortID($user, $port);
 my $id= $portID[0];
@@ -112,11 +114,10 @@ elsif($deposit){
 
 
 
-
-
-
-
 if (defined($user)){
+  if ($deposit or $withdraw){
+    print redirect(-uri=>'port.pl?name='.$port);
+  }
   print header();
 }
 else{
@@ -132,15 +133,23 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
+print "<div style=\"position:absolute;top:0;
+  width:100\%; height:30px; background-color:#eeee00; left:0; z-index:999;\">", 
+  "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
+  "</div>";
+
+
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:500px; padding:10px;\">";
 print "<div style= \"border-bottom:2px ridge black\">",
   h2($port), 
   "</div>";
-print "Cash Account: \$"; 
+print "<strong><u>Cash Account:</u> \$"; 
 my @money2= getCash($id);
 my $cash = $money2[0];
-printf "%20.2f", $cash;
+printf "%20.2f", $cash, "</strong>";
+
+
 print start_form(-name=>"Withdraw"),"<br />",
 	 "&nbsp;&nbsp;",
 	hidden(-name=>'withdraw',default=>['1']),
@@ -148,8 +157,10 @@ print start_form(-name=>"Withdraw"),"<br />",
   "\$", textfield(-name=>'amount1'),
   submit(-class=>'btn', -name=>'Withdraw'),
 	end_form;
+
 print "<strong>OR </strong>";
-print start_form(-name=>"Deposit"),"<br />",
+
+print start_form(-name=>"Deposit"), "<br/>",
   "&nbsp;&nbsp;",
 	hidden(-name=>'deposit',default=>['1']),
   hidden(-name=>'name',default=>['$port']),
@@ -157,8 +168,14 @@ print start_form(-name=>"Deposit"),"<br />",
   submit(-class=>'btn', -name=>'Deposit'),
 	end_form;
 
+print hr, "<strong><u>Stocks:</u></strong>";
+
 print "</div>";
 
+print "<footer style=\"position:fixed;bottom:0;
+  width:100\%; height:30px; background-color:#000000;\">",
+  "<a href=\"portfolios.pl\"><strong>Return to Portfolios</strong> </a>",
+  "</footer>";
 
 print end_html;
 
