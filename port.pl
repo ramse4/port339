@@ -168,13 +168,17 @@ print start_form(-name=>"Deposit"), "<br/>",
   submit(-class=>'btn', -name=>'Deposit'),
 	end_form;
 
-print hr, "<strong><u>Stocks:</u></strong>";
+print hr, "<strong><u>Stocks:</u></strong>", p;
+
+foreach my $stock("AAPL", "IBM", "BLEH"){
+  print "<a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a>", p;
+}
 
 print "</div>";
 
 print "<footer style=\"position:fixed;bottom:0;
   width:100\%; height:30px; background-color:#000000;\">",
-  "<a href=\"portfolios.pl\"><strong>Return to Portfolios</strong> </a>",
+  "<a href=\"portfolios.pl\"><strong>Return to Portfolio</strong> </a>",
   "</footer>";
 
 print end_html;
