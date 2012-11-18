@@ -144,6 +144,18 @@ print "<div class=\"container\" style=\"background-color:#eeeee0;
 print "<div style= \"border-bottom:2px ridge black\">",
   h2($port), 
   "</div>";
+
+###prints port market value as a whole
+print "Market Value of Portfolio: ",
+  "bleh", p;
+
+print "Covariance of stocks: ", 
+  "bleh", p;
+
+print "Correlation matrix of stocks: ", 
+  "bleh", p;
+
+
 print "<strong><u>Cash Account:</u> \$"; 
 my @money2= getCash($id);
 my $cash = $money2[0];
@@ -170,9 +182,26 @@ print start_form(-name=>"Deposit"), "<br/>",
 
 print hr, "<strong><u>Stocks:</u></strong>", p;
 
+##this is canned...needs stocks to actually be gotten with their info 
+print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
+#can changed layout of table as you wish also porbably want to print in each stock page as well
+print "<th>sym</th><th>name</th><th>market value</th><th># of shares</th>";
 foreach my $stock("AAPL", "IBM", "BLEH"){
-  print "<a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a>", p;
+
+  print "<tr>";
+  print "<td><a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a></td>", p
+    "</tr>";
 }
+print "</tbody> </table>";
+
+#area to place adding stocks functionality
+#probably want a form(start_form/end_form/submit btn)
+print "Add stock functionality",p;
+print "symbol:", textfield(),p;
+print "shares:", textfield();
+
+
+
 
 print "</div>";
 

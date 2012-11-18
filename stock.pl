@@ -98,6 +98,11 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
+print "<div style=\"position:absolute;top:0;
+  width:100\%; height:30px; background-color:#eeee00; left:0; z-index:999;\">", 
+  "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
+  "</div>";
+
 
 print "<footer style=\"position:fixed;bottom:0;
   width:100\%; height:30px; background-color:#000000;\">",
