@@ -77,7 +77,12 @@ my $password;
 
 
 
-print header();
+if (defined($user)){
+  print header();
+}
+else{
+  print redirect(-uri=>'login.pl');
+}
 
 print "<html>";
 print "<head>";
@@ -88,8 +93,15 @@ print "<body style=\"height:auto; margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
+print "<div style=\"position:absolute;top:0;
+  width:100\%; height:30px; background-color:#eeee00; left:0; z-index:999;\">", 
+  "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
+  "</div>";
+
+
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:300px; padding-left:10px;\">";
+
 
 if(!$run){
 	print start_form(-name=>"CreatePortfolio"),
@@ -116,7 +128,7 @@ else{
 print "</div>";
 
 
-print "<footer style=\"position:absolute;bottom:0;
+print "<footer style=\"position:fixed;bottom:0;
 	width:100\%; height:30px; background-color:#000000;\">",
 	"<a href=\"portfolios.pl\"><strong>Return to Portfolios</strong> </a>",
 	"</footer>";
@@ -124,6 +136,6 @@ print "<footer style=\"position:absolute;bottom:0;
 print end_html;
 
 sub AddPort{
-	eval{ExecStockSQL(undef, "insert into portfolios (name, cash, owner) values(?,?, ?)", @_)};
+	eval{ExecStockSQL(undef, "insert into portfolios (name, cash, owner) values(?,?,?)", @_)};
 	return $@;
 }

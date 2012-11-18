@@ -65,41 +65,20 @@ use stock_data_access;
 #
 my $inputcookiecontent = cookie($cookiename);
 
-#
-# Will be filled in as we process the cookies and paramters
-#
-my $outputcookiecontent = undef;
-my $deletecookie=0;
 my $user = undef;
 my $password = undef;
-my $logincomplain=0;
+my $delete;
 
-if (defined($inputcookiecontent)) { 
-  # Has cookie, let's decode it
-  ($user,$password) = split(/\//,$inputcookiecontent);
-  $outputcookiecontent = $inputcookiecontent;
-} else {
-  # No cookie, treat as anonymous user
-  ($user,$password) = ("anon","anonanon");
+
+($user,$password) = split(/\//,$inputcookiecontent);
+
+if (defined(param('delete'))){
+  $delete = param("delete");
+  deletePort($user, $delete);
 }
-
-my @outputcookies;
-
-#
-# OK, so now we have user/password
-# and we *may* have an output cookie.   If we have a cookie, we'll send it right 
-# back to the user.
-#
-# We force the expiration date on the generated page to be immediate so
-# that the browsers won't cache it.
-#
-if (defined($outputcookiecontent)) { 
-  my $cookie=cookie(-name=>$cookiename,
-		    -value=>$outputcookiecontent,
-		    -expires=>($deletecookie ? '-1h' : '+1h'));
-  push @outputcookies, $cookie;
-} 
-
+else{
+  $delete = undef;
+}
 
 #
 # Headers and cookies sent back to client
@@ -107,7 +86,15 @@ if (defined($outputcookiecontent)) {
 # The page immediately expires so that it will be refetched if the
 # client ever needs to update it
 #
-print header(-expires=>'now', -cookie=>\@outputcookies);
+if (defined($user)){
+  if (defined($delete)){
+    print redirect(-uri=>'portfolios.pl');
+  }
+  print header();
+}
+else{
+  print redirect(-uri=>'login.pl');
+}
 
 print "<html>";
 print "<head>";
@@ -118,17 +105,19 @@ print "<body style=\"height:auto;margin:0\">";
 
 print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
-
-
-
-print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:500px; padding:10px;\">";
-print "<div style= \"border-bottom:2px ridge black\">" ,
-  h2($user."\'s portfolios"), 
+print "<div style=\"position:absolute;top:0;
+  width:100\%; height:30px; background-color:#eeee00; left:0; z-index:999;\">", 
+  "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
   "</div>";
 
 
-print "<table class=\"table\"> <tbody>";
+print "<div class=\"container\" style=\"background-color:#eeeee0; 
+	margin:100px auto; width:400px; padding:10px;\">";
+print "<div style= \"border-bottom:2px ridge black\">" ,
+  h2($user."\'s portfolios"),
+  "</div>";
+
+print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 my @ports = GetPorts($user);
 my $i;
 
@@ -141,7 +130,7 @@ foreach my $port(@ports){
     print "<tr class=\"info\">";
   }
   print  "<td><a href=\"port.pl?name=$port\"> $port </a> </td> 
-    <td><button class=\"btn btn-danger\">Delete Portfolio</button> </td></tr>";
+    <td><a href=\"portfolios.pl?delete=$port\" class=\"button btn btn-danger\">Delete Portfolio</a> </td></tr>";
 }
 
 
@@ -163,4 +152,10 @@ sub GetPorts{
   } else {
     return @row;
   }
+}
+
+sub deletePort{
+  my ($user, $port)=@_;
+  eval {ExecStockSQL(undef, "delete from portfolios where owner=? and name=?", $user, $port)};
+  return $@;
 }

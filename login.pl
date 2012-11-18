@@ -120,6 +120,11 @@ if ($run) {
 if (defined($outputcookiecontent)) { 
   ($user,$password) = split(/\//,$outputcookiecontent);
 }
+
+if (defined(param("logout"))){
+  $deletecookie=1;
+}
+
 my @outputcookies;
 
 #
@@ -178,7 +183,7 @@ print start_form(-name=>"Login"),
 print "</div>";
 
 
-print "<footer style=\"position:absolute;bottom:0;
+print "<footer style=\"position:fixed;bottom:0;
 	width:100\%; height:100px; background-color:#000000;\">", "<center>",
 	"<a href=\"handins.pl?view=sbfc\"><strong>View Storyboard/FlowChart</strong> </a>",
 	p,"<a href=\"handins.pl?view=er\"><strong>View E/R Diagram</strong> </a>",

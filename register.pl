@@ -38,10 +38,6 @@ use Time::ParseDate;
 #
 
 
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
-
-
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
@@ -114,7 +110,7 @@ else{
 }
 print "</div>";
 
-print "<footer style=\"position:absolute;bottom:0;
+print "<footer style=\"position:fixed;bottom:0;
 	width:100\%; height:30px; background-color:#000000;\">",
 	"<a href=\"login.pl\"><strong>Return to Login</strong> </a>",
 	"</footer>";
