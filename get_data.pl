@@ -50,9 +50,7 @@ my $sql;
 
 $sql = "select " . join(",",@fields) . " from ".GetStockPrefix()."StocksDaily";
 $sql.= " where symbol = '$symbol'";
-$sql.= " and timestamp >= $from" if $from;
-$sql.= " and timestamp <= $to" if $to;
-$sql.= " order by timestamp";
+$sql.= "union select " . join(",",@fields) . " from stocksdailyaddon";
 
 my $data = ExecStockSQL("TEXT",$sql);
 
@@ -66,6 +64,9 @@ if (!$plot) {
 
   open(GNUPLOT, "|gnuplot") or die "Cannot open gnuplot for plotting\n";
   GNUPLOT->autoflush(1);
+print GNUPLOT "set term png\n";
+print GNUPLOT "set output \"predictFile.png\"\n";
+
   print GNUPLOT "set title '$symbol'\nset xlabel 'time'\nset ylabel 'data'\n";
   print GNUPLOT "plot '_plot.in' with linespoints;\n";
   STDIN->autoflush(1);
