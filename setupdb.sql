@@ -24,6 +24,8 @@ create table users
  EMAIL varchar(64)
 );
 
+--We require each portfolio to have an owner for our app,
+--even though this is not required in real life.
 create table portfolios
 (
  ID number not null primary key,
