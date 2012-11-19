@@ -37,8 +37,8 @@ use Time::ParseDate;
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
+  $ENV{PORTF_DBUSER}="djl605";
+  $ENV{PORTF_DBPASS}="rufi43TJ";
 
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;
@@ -56,8 +56,8 @@ use stock_data_access;
 #
 # You need to override these for access to your database
 #
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
+my $dbuser="djl605";
+my $dbpasswd="rufi43TJ";
 
 my $cookiename="PortSession";
 
@@ -112,6 +112,25 @@ elsif($deposit){
   depositCash($id, $amount);
 }
 
+my $symbol;
+my $shares;
+
+if (defined(param("symbol")) and defined(param("shares"))){
+	$symbol = param("symbol");
+	$shares = param("shares");
+
+	ExecStockSQL(undef, "insert into holdings values(?, ?, ?)", $symbol, $id, $shares);
+
+
+	my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=? union all select last from stockssymbolsaddon where symbol=?)) and symbol=?", $symbol, $symbol, $symbol);
+	};
+
+
+	my $price = $stockinfo[1];
+	die $price;
+      }
+
+
 
 
 if (defined($user)){
@@ -123,6 +142,9 @@ if (defined($user)){
 else{
   print redirect(-uri=>'login.pl');
 }
+
+
+
 
 print "<html>";
 print "<head>";
@@ -186,7 +208,9 @@ print hr, "<strong><u>Stocks:</u></strong>", p;
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
 print "<th>sym</th><th>name</th><th>market value</th><th># of shares</th>";
-foreach my $stock("AAPL", "IBM", "BLEH"){
+my @stocks = ExecStockSQL("COL", "select symbol from holdings where portfolioid=?", $id);
+
+foreach my $stock (@stocks){
 
   print "<tr>";
   print "<td><a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a></td>", p
@@ -196,9 +220,12 @@ print "</tbody> </table>";
 
 #area to place adding stocks functionality
 #probably want a form(start_form/end_form/submit btn)
-print "Add stock functionality",p;
-print "symbol:", textfield(),p;
-print "shares:", textfield();
+print start_form, 
+      "symbol:", textfield(-name=>'symbol'),p,
+      "shares:", textfield(-name=>'shares'),p,
+      hidden(-name=>'name',default=>['$port']),
+      submit(-class=>'btn', -name=> 'Add Stock'),
+      end_form;
 
 
 

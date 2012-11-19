@@ -11,16 +11,14 @@ use strict;
 use CGI qw(:standard);
 use DBI;
 use Time::ParseDate;
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
 
 my $cookiename="PortSession";
 
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
+  $ENV{PORTF_DBUSER}="djl605";
+  $ENV{PORTF_DBPASS}="rufi43TJ";
 
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;
