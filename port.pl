@@ -209,7 +209,7 @@ print hr, "<strong><u>Stocks:</u></strong>", p;
 ##this is canned...needs stocks to actually be gotten with their info 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
-print "<th>sym</th><th>market value</th><th># of shares</th>";
+print "<th>sym</th><th>market value</th><th># of shares</th><th>cov</th>";
 my @stocks = ExecStockSQL("2D", "select symbol, count from holdings where portfolioid=?", $id);
 
 my $portValue = 0;
@@ -226,8 +226,11 @@ for (my $i = 0; $i < @stocks; $i++) {
     print "<tr><td> <a href=\"stock.pl?port=$port&stock=$s\"> $s </a></td>";
 
 	 printf( "<td>\$%20.2f</td>",$value * $s2 );
-	 print  "<td> $s2</td>",
-	  "</tr>";
+	 print  "<td> $s2</td>";
+         my @cov = `./get_info.pl $s`;
+	 my $COV = (split(/\s+/, $cov[1]))[7];
+	 print "<td>$COV</td>",
+	 "</tr>";
   }
 }
 
@@ -249,7 +252,7 @@ if($#stocksymbols >= 1) {
   print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 
 
-  my @outputRows= `./get_covar.pl --field1=close --field2=close --from="1/1/95" --to="12/31/2012" $covarArgs`;
+  my @outputRows= `./get_covar.pl --field1=close --field2=close $covarArgs`;
 
   shift(@outputRows);
   shift(@outputRows);
