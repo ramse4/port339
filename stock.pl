@@ -10,16 +10,14 @@ use strict;
 use CGI qw(:standard);
 use DBI;
 use Time::ParseDate;
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
 
 my $cookiename="PortSession";
 
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
+  $ENV{PORTF_DBUSER}="djl605";
+  $ENV{PORTF_DBPASS}="rufi43TJ";
 
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;
@@ -34,8 +32,15 @@ BEGIN {
 
 use stock_data_access;
 my $inputcookiecontent = cookie($cookiename);
+
+my $stockName;
+if (defined param("name")){
+	$stockName = param("name");
+ }
+ else{
+	$stockName=param("stock");
+ }
 my $portName = param("port");
-my $stockName = param("stock");
 my $action;
 my $run;
 if (defined(param("act"))) { 
@@ -70,7 +75,8 @@ if (!$run){
         submit (-name=>'addDaily', -value=>'Record Daily Info for '.$stockName),"<br/>",
         hidden(-name=>'run',-default=>['1']), 
         hidden(-name=>'act',-default=>['daily']), 
-		hidden(-name=>'name',-default=>[$stockName]),
+	hidden(-name=>'name',-default=>[$stockName]),
+	hidden(-name=>'port',-default=>[$portName]),
         end_form;
   print "</td></tr>";
   print "<tr><td>";
@@ -181,6 +187,7 @@ print end_html;
 sub UpdateDaily{
   my $symbol = param("stock"); 
   print $symbol;
+  #my ($symbol) = @_; 
   my @info=("time", "open", "high", "low", "close","volume");
   my @values = (); 
   my $con=Finance::Quote->new();

@@ -37,8 +37,8 @@ use Time::ParseDate;
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
+  $ENV{PORTF_DBUSER}="djl605";
+  $ENV{PORTF_DBPASS}="rufi43TJ";
 
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;
@@ -56,8 +56,8 @@ use stock_data_access;
 #
 # You need to override these for access to your database
 #
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
+my $dbuser="djl605";
+my $dbpasswd="rufi43TJ";
 
 my $cookiename="PortSession";
 
@@ -112,10 +112,29 @@ elsif($deposit){
   depositCash($id, $amount);
 }
 
+my $symbol;
+my $shares;
+
+if (defined(param("symbol")) and defined(param("shares"))){
+	$symbol = param("symbol");
+	$shares = param("shares");
+
+	ExecStockSQL(undef, "insert into holdings values(?, ?, ?)", $symbol, $id, $shares);
+
+
+	my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $symbol, $symbol, $symbol);
+	};
+
+
+	my $price = $stockinfo[1];
+	withdrawCash($id, $price * $shares);
+      }
+
+
 
 
 if (defined($user)){
-  if ($deposit or $withdraw){
+  if ($deposit or $withdraw or ($symbol and $shares)){
     print redirect(-uri=>'port.pl?name='.$port);
   }
   print header();
@@ -123,6 +142,9 @@ if (defined($user)){
 else{
   print redirect(-uri=>'login.pl');
 }
+
+
+
 
 print "<html>";
 print "<head>";
@@ -140,20 +162,10 @@ print "<div style=\"position:absolute;top:0;
 
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:500px; padding:10px;\">";
+	margin:100px auto; width:800px; padding:10px;\">";
 print "<div style= \"border-bottom:2px ridge black\">",
   h2($port), 
   "</div>";
-
-###prints port market value as a whole
-print "Market Value of Portfolio: ",
-  "bleh", p;
-
-print "Covariance of stocks: ", 
-  "bleh", p;
-
-print "Correlation matrix of stocks: ", 
-  "bleh", p;
 
 
 print "<strong><u>Cash Account:</u> \$"; 
@@ -180,25 +192,86 @@ print start_form(-name=>"Deposit"), "<br/>",
   submit(-class=>'btn', -name=>'Deposit'),
 	end_form;
 
+
+
+#area to place adding stocks functionality
+#probably want a form(start_form/end_form/submit btn)
+print hr, "<strong><u>Add Stock:</u></strong>",p,
+      start_form, 
+      "symbol:", textfield(-name=>'symbol'),p,
+      "shares:", textfield(-name=>'shares'),p,
+      hidden(-name=>'name',default=>['$port']),
+      submit(-class=>'btn', -name=> 'Add Stock'),
+      end_form;
+
 print hr, "<strong><u>Stocks:</u></strong>", p;
 
 ##this is canned...needs stocks to actually be gotten with their info 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
-print "<th>sym</th><th>name</th><th>market value</th><th># of shares</th>";
-foreach my $stock("AAPL", "IBM", "BLEH"){
+print "<th>sym</th><th>market value</th><th># of shares</th><th>cov</th><th>Beta</th>";
+my @ndaqInfo = `./get_info.pl NDAQ`;
+my $marketVar = (split(/\s+/, $ndaqInfo[1]))[4];
+my @stocks = ExecStockSQL("2D", "select symbol, count from holdings where portfolioid=?", $id);
 
-  print "<tr>";
-  print "<td><a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a></td>", p
-    "</tr>";
+my $portValue = 0;
+my @stocksymbols = ();
+for (my $i = 0; $i < @stocks; $i++) {
+  foreach my $stock ($stocks[$i]) {
+    my $s = @{$stock}[0];
+    push(@stocksymbols, $s);
+    my $s2 = @{$stock}[1];
+    my @stockInfo = ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $s, $s, $s);
+
+    my $value = $stockInfo[1];
+    $portValue += $value * $s2;
+    print "<tr><td> <a href=\"stock.pl?port=$port&stock=$s\"> $s </a></td>";
+
+	 printf( "<td>\$%20.2f</td>",$value * $s2 );
+	 print  "<td> $s2</td>";
+         my @cov = `./get_info.pl $s`;
+	 my $COV = (split(/\s+/, $cov[1]))[7];
+	 print "<td>$COV</td>";
+	 my @covarWithMarket = `./get_covar.pl $s NDAQ`;
+	 my $beta = (split(/\s+/, $covarWithMarket[5]))[2] / ($marketVar * $marketVar);
+	 print "<td>$beta</td>",
+	 "</tr>";
+  }
 }
+
 print "</tbody> </table>";
 
-#area to place adding stocks functionality
-#probably want a form(start_form/end_form/submit btn)
-print "Add stock functionality",p;
-print "symbol:", textfield(),p;
-print "shares:", textfield();
+###prints port market value as a whole
+print hr, "<strong><u>Statistics:</u></strong>", p,p,
+      "Market Value of Portfolio: ";
+printf("\$%20.2f", $portValue + $cash);
+print p;
+
+
+if($#stocksymbols >= 1) {
+  my $covarArgs = join(" ", @stocksymbols);
+
+
+  print "Correlation matrix of stocks: ", p;
+
+  print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
+
+
+  my @outputRows= `./get_covar.pl --field1=close --field2=close $covarArgs`;
+
+  shift(@outputRows);
+  shift(@outputRows);
+  shift(@outputRows);
+  shift(@outputRows);
+  foreach my $outputRow (@outputRows) {
+    print "<tr><td>";
+    $outputRow =~ s/\s+/<\/td><td>/g;
+    print $outputRow, "</td></tr>";
+  }
+
+  print "</tbody></table>";
+}
+
 
 
 

@@ -53,7 +53,7 @@ for ($i=0;$i<=$#symbols;$i++) {
 
       $sql = "select avg((l.$field1 - $mean_f1)*(r.$field2 - $mean_f2)) from ".GetStockPrefix()."StocksDaily l join ".GetStockPrefix()."StocksDaily r on  l.timestamp=r.timestamp where l.symbol='$s1' and r.symbol='$s2'";
       $sql.= " and l.timestamp>= $from" if $from;
-      $sql.= " and l.timsetamp<= $to" if $to;
+      $sql.= " and l.timestamp<= $to" if $to;
 
       ($covar{$s1}{$s2}) = ExecStockSQL("ROW",$sql);
 

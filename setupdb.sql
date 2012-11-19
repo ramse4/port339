@@ -46,6 +46,8 @@ create table holdings
 );
 
 
+
+
 --increments portfolio id with each insert
 CREATE SEQUENCE test_sequence
 START WITH 1

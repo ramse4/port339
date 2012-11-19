@@ -80,13 +80,15 @@ sub ExecStockSQL {
   }
 
   my @ret;
-  
-  # multirow or single column output or strings
-if(defined $type){
-  while (@data=$sth->fetchrow_array()) {
-    push @ret, [@data];
+
+  if(defined $type)
+  {
+
+    # multirow or single column output or strings
+    while (@data=$sth->fetchrow_array()) {
+      push @ret, [@data];
+    }
   }
-}
 
   # single column
   if (defined $type and $type eq "COL") { 

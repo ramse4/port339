@@ -37,16 +37,14 @@ use Time::ParseDate;
 #
 # You need to override these for access to your database
 #
-my $dbuser="rhf687";
-my $dbpasswd="Yoe53chN";
 
 my $cookiename="PortSession";
 
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
-  $ENV{PORTF_DBUSER}="rhf687";
-  $ENV{PORTF_DBPASS}="Yoe53chN";
+  $ENV{PORTF_DBUSER}="djl605";
+  $ENV{PORTF_DBPASS}="rufi43TJ";
 
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;

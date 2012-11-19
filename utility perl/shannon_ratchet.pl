@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w 
 
+
 $#ARGV==2 or die "usage: shannon_ratchet.pl symbol initialcash tradingcost\n";
 
 ($symbol, $initialcash,$tradecost) = @ARGV;
@@ -9,6 +10,7 @@ $lastcash=$initialcash;
 $laststock=0;
 $lasttotal=$lastcash;
 $lasttotalaftertradecost=$lasttotal;
+
 
 open(STOCK, "get_data.pl --close $symbol |");
 
