@@ -34,7 +34,7 @@ BEGIN {
 
 use stock_data_access;
 my $inputcookiecontent = cookie($cookiename);
-
+my $portName = param("port");
 my $stockName = param("stock");
 my $action;
 my $run;
@@ -75,16 +75,27 @@ if (!$run){
   print "</td></tr>";
   print "<tr><td>";
   print start_form(-name=>'Shannon'),
-      h3('Prediction of ' . $stockName),
+      h3('Shannon Value of ' . $stockName),
          "Initial Cash: ", textfield(-name=>'initialcash'),"<br/>", p,
           "Tradecost: ", textfield(-name=>'tradecost'),"<br/>", 
-	    hidden(-name=>'symbol',-default=>['AAPL']),
+	    hidden(-name=>'symbol',-default=>[$stockName]),
 	    hidden(-name=>'run',-default=>['1']),
 	    hidden(-name=>'act',-default=>['shannon']),
             submit(-class=>'btn', -name=>'Submit'), "</center>",
       end_form; 
   print "</td></tr>";
+
   print "<tr><td>";
+  print start_form(-name=>'Predictor'),
+      h3('Prediction of ' . $stockName),
+         "Number of days to predict: ", textfield(-name=>'days'),"<br/>", p,
+	    hidden(-name=>'symbol',-default=>[$stockName]),
+	    hidden(-name=>'run',-default=>['1']),
+	    hidden(-name=>'act',-default=>['predict']),
+            submit(-class=>'btn', -name=>'Submit'), "</center>",
+      end_form; 
+  print "</td></tr>";
+
 
   print start_form(-name=>'Plot', -action=>'plot_stock_final.pl'),
       h3('Plot History of ' . $stockName),
@@ -147,7 +158,24 @@ if (!$run){
     print "</tbody></table>";
 
  }
+ if ($action eq "predict"){
+    my $stock = param("symbol");
+    my $days = param("days");
+    
+    my $predictor = `./time_series_symbol_project.pl $stock $days AWAIT 200 AR 16`;
+    #print $predictor;
+    print "<b>Future Predictions</b><p><img src =\"predictFile.png\"><p>\n";
+    print start_form,
+      submit (-name=>'backToStock', -value=>'Back'),"<br/>",
+       hidden(-name=>'name',-default=>[$stockName]),
+        end_form;
+  }
 }
+
+print "<footer style=\"bottom:0;
+        width:30\%; height:30px; background-color:#000000;\">",
+        "<a href=\"port.pl?name=$portName\"><strong>Return to Portfolio $portName</strong> </a>",
+        "</footer>";
 print end_html;
 
 sub UpdateDaily{
