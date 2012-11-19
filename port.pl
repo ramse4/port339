@@ -162,7 +162,7 @@ print "<div style=\"position:absolute;top:0;
 
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
-	margin:100px auto; width:500px; padding:10px;\">";
+	margin:100px auto; width:800px; padding:10px;\">";
 print "<div style= \"border-bottom:2px ridge black\">",
   h2($port), 
   "</div>";
@@ -209,7 +209,9 @@ print hr, "<strong><u>Stocks:</u></strong>", p;
 ##this is canned...needs stocks to actually be gotten with their info 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
-print "<th>sym</th><th>market value</th><th># of shares</th><th>cov</th>";
+print "<th>sym</th><th>market value</th><th># of shares</th><th>cov</th><th>Beta</th>";
+my @ndaqInfo = `./get_info.pl NDAQ`;
+my $marketVar = (split(/\s+/, $ndaqInfo[1]))[4];
 my @stocks = ExecStockSQL("2D", "select symbol, count from holdings where portfolioid=?", $id);
 
 my $portValue = 0;
@@ -229,7 +231,10 @@ for (my $i = 0; $i < @stocks; $i++) {
 	 print  "<td> $s2</td>";
          my @cov = `./get_info.pl $s`;
 	 my $COV = (split(/\s+/, $cov[1]))[7];
-	 print "<td>$COV</td>",
+	 print "<td>$COV</td>";
+	 my @covarWithMarket = `./get_covar.pl $s NDAQ`;
+	 my $beta = (split(/\s+/, $covarWithMarket[5]))[2] / ($marketVar * $marketVar);
+	 print "<td>$beta</td>",
 	 "</tr>";
   }
 }
