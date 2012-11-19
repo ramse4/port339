@@ -75,7 +75,8 @@ if (!$run){
         submit (-name=>'addDaily', -value=>'Record Daily Info for '.$stockName),"<br/>",
         hidden(-name=>'run',-default=>['1']), 
         hidden(-name=>'act',-default=>['daily']), 
-		hidden(-name=>'name',-default=>[$stockName]),
+	hidden(-name=>'name',-default=>[$stockName]),
+	hidden(-name=>'port',-default=>[$portName]),
         end_form;
   print "</td></tr>";
   print "<tr><td>";
@@ -185,7 +186,6 @@ print end_html;
 
 sub UpdateDaily{
   my ($symbol) = @_; 
- $symbol = "CNA";
   my @info=("time", "open", "high", "low", "close","volume");
   my @values = (); 
   my $con=Finance::Quote->new();

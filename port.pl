@@ -211,7 +211,7 @@ for (my $i = 0; $i < @stocks; $i++) {
     $portValue += $value * $s2;
     print "<tr><td> <a href=\"stock.pl?port=$port&stock=$s\"> $s </a></td>";
 
-	 printf( "<td>\$%20.2f</td>",$value );
+	 printf( "<td>\$%20.2f</td>",$value * $s2 );
 	 print  "<td> $s2</td>",
 	  "</tr>";
   }
@@ -221,7 +221,7 @@ print "</tbody> </table>";
 
 ###prints port market value as a whole
 print "Market Value of Portfolio: ";
-printf("\$%20.2f", $portValue);
+printf("\$%20.2f", $portValue + $cash);
 print p;
 
 print "Covariance of stocks: ", 
