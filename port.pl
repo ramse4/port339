@@ -122,19 +122,19 @@ if (defined(param("symbol")) and defined(param("shares"))){
 	ExecStockSQL(undef, "insert into holdings values(?, ?, ?)", $symbol, $id, $shares);
 
 
-	my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=? union all select last from stockssymbolsaddon where symbol=?)) and symbol=?", $symbol, $symbol, $symbol);
+	my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $symbol, $symbol, $symbol);
 	};
 
 
 	my $price = $stockinfo[1];
-	die $price;
+	withdrawCash($id, $price * $shares);
       }
 
 
 
 
 if (defined($user)){
-  if ($deposit or $withdraw){
+  if ($deposit or $withdraw or ($symbol and $shares)){
     print redirect(-uri=>'port.pl?name='.$port);
   }
   print header();
@@ -167,16 +167,6 @@ print "<div style= \"border-bottom:2px ridge black\">",
   h2($port), 
   "</div>";
 
-###prints port market value as a whole
-print "Market Value of Portfolio: ",
-  "bleh", p;
-
-print "Covariance of stocks: ", 
-  "bleh", p;
-
-print "Correlation matrix of stocks: ", 
-  "bleh", p;
-
 
 print "<strong><u>Cash Account:</u> \$"; 
 my @money2= getCash($id);
@@ -207,16 +197,38 @@ print hr, "<strong><u>Stocks:</u></strong>", p;
 ##this is canned...needs stocks to actually be gotten with their info 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
-print "<th>sym</th><th>name</th><th>market value</th><th># of shares</th>";
-my @stocks = ExecStockSQL("COL", "select symbol from holdings where portfolioid=?", $id);
+print "<th>sym</th><th>market value</th><th># of shares</th>";
+my @stocks = ExecStockSQL("2D", "select symbol, count from holdings where portfolioid=?", $id);
 
-foreach my $stock (@stocks){
+my $portValue = 0;
+for (my $i = 0; $i < @stocks; $i++) {
+  foreach my $stock ($stocks[$i]) {
+    my $s = @{$stock}[0];
+    my $s2 = @{$stock}[1];
+    my @stockInfo = ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $s, $s, $s);
 
-  print "<tr>";
-  print "<td><a href=\"stock.pl?port=$port&stock=$stock\"> $stock </a></td>", p
-    "</tr>";
+    my $value = $stockInfo[1];
+    $portValue += $value * $s2;
+    print "<tr><td> <a href=\"stock.pl?port=$port&stock=$s\"> $s </a></td>";
+
+	 printf( "<td>\$%20.2f</td>",$value );
+	 print  "<td> $s2</td>",
+	  "</tr>";
+  }
 }
+
 print "</tbody> </table>";
+
+###prints port market value as a whole
+print "Market Value of Portfolio: ";
+printf("\$%20.2f", $portValue);
+print p;
+
+print "Covariance of stocks: ", 
+  "bleh", p;
+
+print "Correlation matrix of stocks: ", 
+  "bleh", p;
 
 #area to place adding stocks functionality
 #probably want a form(start_form/end_form/submit btn)

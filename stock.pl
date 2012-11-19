@@ -33,7 +33,13 @@ BEGIN {
 use stock_data_access;
 my $inputcookiecontent = cookie($cookiename);
 
-my $stockName = param("stock");
+my $stockName;
+if (defined param("name")){
+	$stockName = param("name");
+ }
+ else{
+	$stockName=param("stock");
+ }
 my $action;
 my $run;
 if (defined(param("act"))) { 
