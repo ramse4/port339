@@ -192,6 +192,18 @@ print start_form(-name=>"Deposit"), "<br/>",
   submit(-class=>'btn', -name=>'Deposit'),
 	end_form;
 
+
+
+#area to place adding stocks functionality
+#probably want a form(start_form/end_form/submit btn)
+print hr, "<strong><u>Add Stock:</u></strong>",p,
+      start_form, 
+      "symbol:", textfield(-name=>'symbol'),p,
+      "shares:", textfield(-name=>'shares'),p,
+      hidden(-name=>'name',default=>['$port']),
+      submit(-class=>'btn', -name=> 'Add Stock'),
+      end_form;
+
 print hr, "<strong><u>Stocks:</u></strong>", p;
 
 ##this is canned...needs stocks to actually be gotten with their info 
@@ -201,9 +213,11 @@ print "<th>sym</th><th>market value</th><th># of shares</th>";
 my @stocks = ExecStockSQL("2D", "select symbol, count from holdings where portfolioid=?", $id);
 
 my $portValue = 0;
+my @stocksymbols = ();
 for (my $i = 0; $i < @stocks; $i++) {
   foreach my $stock ($stocks[$i]) {
     my $s = @{$stock}[0];
+    push(@stocksymbols, $s);
     my $s2 = @{$stock}[1];
     my @stockInfo = ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $s, $s, $s);
 
@@ -220,24 +234,36 @@ for (my $i = 0; $i < @stocks; $i++) {
 print "</tbody> </table>";
 
 ###prints port market value as a whole
-print "Market Value of Portfolio: ";
+print hr, "<strong><u>Statistics:</u></strong>", p,p,
+      "Market Value of Portfolio: ";
 printf("\$%20.2f", $portValue + $cash);
 print p;
 
-print "Covariance of stocks: ", 
-  "bleh", p;
 
-print "Correlation matrix of stocks: ", 
-  "bleh", p;
+if($#stocksymbols >= 1) {
+  my $covarArgs = join(" ", @stocksymbols);
 
-#area to place adding stocks functionality
-#probably want a form(start_form/end_form/submit btn)
-print start_form, 
-      "symbol:", textfield(-name=>'symbol'),p,
-      "shares:", textfield(-name=>'shares'),p,
-      hidden(-name=>'name',default=>['$port']),
-      submit(-class=>'btn', -name=> 'Add Stock'),
-      end_form;
+
+  print "Correlation matrix of stocks: ", p;
+
+  print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
+
+
+  my @outputRows= `./get_covar.pl --field1=close --field2=close --from="1/1/95" --to="12/31/2012" $covarArgs`;
+
+  shift(@outputRows);
+  shift(@outputRows);
+  shift(@outputRows);
+  shift(@outputRows);
+  foreach my $outputRow (@outputRows) {
+    print "<tr><td>";
+    $outputRow =~ s/\s+/<\/td><td>/g;
+    print $outputRow, "</td></tr>";
+  }
+
+  print "</tbody></table>";
+}
+
 
 
 
