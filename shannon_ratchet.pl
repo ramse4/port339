@@ -1,4 +1,20 @@
 #!/usr/bin/perl -w 
+BEGIN {
+  $ENV{PORTF_DBMS}="oracle";
+  $ENV{PORTF_DB}="cs339";
+  $ENV{PORTF_DBUSER}="rhf687";
+  $ENV{PORTF_DBPASS}="Yoe53chN";
+
+  unless ($ENV{BEGIN_BLOCK}) {
+    use Cwd;
+    $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";
+    $ENV{ORACLE_HOME}=$ENV{ORACLE_BASE}."/db_1";
+    $ENV{ORACLE_SID}="CS339";
+    $ENV{LD_LIBRARY_PATH}=$ENV{ORACLE_HOME}."/lib";
+    $ENV{BEGIN_BLOCK} = 1;
+    exec 'env',cwd().'/'.$0,@ARGV;
+  }
+};
 
 $#ARGV==2 or die "usage: shannon_ratchet.pl symbol initialcash tradingcost\n";
 

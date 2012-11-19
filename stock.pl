@@ -4,7 +4,6 @@ use Data::Dumper;
 use Finance::Quote;
 use Date::Manip;
 use Getopt::Long;
-use Time::ParseDate;
 use Time::CTime;
 use FileHandle;
 use strict;
@@ -75,16 +74,31 @@ if (!$run){
         end_form;
   print "</td></tr>";
   print "<tr><td>";
-  print start_form(-name=>'Plot', -action=>'plot_stock.pl'),
-            h3('Plot History of ' . $stockName),
-            #"From Time: ", textfield(-name=>'fromTime'),p,
-            #"To Time: ", password_field(-name=>'toTime'),"<br/>", 
-            #hidden(-name=>'fromTime',-default=>["1/1/99"]),
-            #hidden(-name=>'toTime',-default=>["12/31/00"]),
-			hidden(-name=>'symbol',-default=>[$stockName]),
-			hidden(-name=>'type',-default=>['plot']),
+  
+  #my $output = `./shannon_ratchet.pl AAPL 1000 10`;
+  #print $output;
+
+  print start_form(-name=>'Shannon', -action=>'shannon_ratchet.pl'),
+      h3('Prediction of ' . $stockName),
+         "Initial Cash: ", textfield(-name=>'initialcash'),"<br/>", p,
+          "Tradecost: ", textfield(-name=>'tradecost'),"<br/>", 
+	    hidden(-name=>'symbol',-default=>['AAPL']),
+            submit(-class=>'btn', -name=>'Submit'), "</center>",
+      end_form; 
+  print "</td></tr>";
+  print "<tr><td>";
+
+  print start_form(-name=>'Plot', -action=>'plot_stock_orig.pl'),
+      h3('Plot History of ' . $stockName),
+        "From Date: ", textfield(-name=>'fromTime'),p,
+        "To Date: ", textfield(-name=>'toTime'),"<br/>", 
+	  hidden(-name=>'symbol',-default=>['AAPL']),
+	  hidden(-name=>'type',-default=>['plot']),
+	  #hidden(-name=>'act',-default=>['plot']),
+	  #hidden(-name=>'run',-default=>['1']),
+	  #hidden(-name=>'act',-default=>['plot']),
             submit(-class=>'btn', -name=>'Plot'), "</center>",
-            end_form; 
+      end_form; 
   print "</td></tr>";
   print "</tbody></table>";
 }else{
@@ -109,8 +123,8 @@ if (!$run){
   if ($action eq "plot"){
 	$run = 0;
 	$action = base;
-	#PlotHistory($stockName);
-  	print "<a href=\'plot_stock.pl?symbol=$stockName&type=plot\'>Plot</a>";
+	PlotHistory($stockName);
+  	#print "<a href=\'plot_stock.pl?symbol=$stockName&type=plot\'>Plot</a>";
 	
   }
 }
@@ -153,6 +167,14 @@ sub UpdateDaily{
 }
 
 sub PlotHistory{
+ my $from = param("fromTime");
+ my $to = param("toTime");
+ my $stock = param("symbol");
+ my @results = `./get_data.pl --from='$from' --to='$to' --close --plot $stock`;
+ print @results;
+}
+
+sub PlotHistoryA{
   
   my $close=1;
 
