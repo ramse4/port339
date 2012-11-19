@@ -179,8 +179,8 @@ print "<footer style=\"bottom:0;
 print end_html;
 
 sub UpdateDaily{
-  my ($symbol) = @_; 
- $symbol = "CNA";
+  my $symbol = param("stock"); 
+  print $symbol;
   my @info=("time", "open", "high", "low", "close","volume");
   my @values = (); 
   my $con=Finance::Quote->new();
