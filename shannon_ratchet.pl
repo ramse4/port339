@@ -1,10 +1,11 @@
 #!/usr/bin/perl -w 
+
 BEGIN {
   $ENV{PORTF_DBMS}="oracle";
   $ENV{PORTF_DB}="cs339";
   $ENV{PORTF_DBUSER}="rhf687";
   $ENV{PORTF_DBPASS}="Yoe53chN";
-
+  $ENV{PATH} = $ENV{PATH} . ":.";
   unless ($ENV{BEGIN_BLOCK}) {
     use Cwd;
     $ENV{ORACLE_BASE}="/raid/oracle11g/app/oracle/product/11.2.0.1.0";

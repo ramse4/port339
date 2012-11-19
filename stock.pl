@@ -35,7 +35,7 @@ BEGIN {
 use stock_data_access;
 my $inputcookiecontent = cookie($cookiename);
 
-my $stockName = param("name");
+my $stockName = param("stock");
 my $action;
 my $run;
 if (defined(param("act"))) { 
@@ -74,25 +74,23 @@ if (!$run){
         end_form;
   print "</td></tr>";
   print "<tr><td>";
-  
-  #my $output = `./shannon_ratchet.pl AAPL 1000 10`;
-  #print $output;
-
-  print start_form(-name=>'Shannon', -action=>'shannon_ratchet.pl'),
+  print start_form(-name=>'Shannon'),
       h3('Prediction of ' . $stockName),
          "Initial Cash: ", textfield(-name=>'initialcash'),"<br/>", p,
           "Tradecost: ", textfield(-name=>'tradecost'),"<br/>", 
 	    hidden(-name=>'symbol',-default=>['AAPL']),
+	    hidden(-name=>'run',-default=>['1']),
+	    hidden(-name=>'act',-default=>['shannon']),
             submit(-class=>'btn', -name=>'Submit'), "</center>",
       end_form; 
   print "</td></tr>";
   print "<tr><td>";
 
-  print start_form(-name=>'Plot', -action=>'plot_stock_orig.pl'),
+  print start_form(-name=>'Plot', -action=>'plot_stock_final.pl'),
       h3('Plot History of ' . $stockName),
         "From Date: ", textfield(-name=>'fromTime'),p,
         "To Date: ", textfield(-name=>'toTime'),"<br/>", 
-	  hidden(-name=>'symbol',-default=>['AAPL']),
+	  hidden(-name=>'symbol',-default=>[$stockName]),
 	  hidden(-name=>'type',-default=>['plot']),
 	  #hidden(-name=>'act',-default=>['plot']),
 	  #hidden(-name=>'run',-default=>['1']),
@@ -120,13 +118,35 @@ if (!$run){
 	  print "</tbody></table>";
     }
   }
-  if ($action eq "plot"){
-	$run = 0;
-	$action = base;
-	PlotHistory($stockName);
+  #if ($action eq "plot"){
+#	$run = 0;
+#	$action = base;
+#	PlotHistory($stockName);
   	#print "<a href=\'plot_stock.pl?symbol=$stockName&type=plot\'>Plot</a>";
 	
-  }
+ # }
+ if ($action eq "shannon"){
+    my $initial = param("initialcash");
+    my $tradecost = param("tradecost"); 
+    my $stock = param("symbol");
+    print h4($stock . "'s future predictions");
+    print "<table class=\"table\"> <tbody>";
+    print "<tr><td>";
+
+    my @output = `./shannon_ratchet.pl $stock $initial $tradecost`;
+    foreach my $out(@output){
+	print $out."</br>";
+    }
+    print "</td></tr>";
+    print "<tr><td>";
+    print start_form,
+      submit (-name=>'backToStock', -value=>'Back'),"<br/>",
+       hidden(-name=>'name',-default=>[$stockName]),
+        end_form;
+    print "</td></tr>";
+    print "</tbody></table>";
+
+ }
 }
 print end_html;
 
@@ -166,85 +186,11 @@ sub UpdateDaily{
    return $@; 
 }
 
-sub PlotHistory{
- my $from = param("fromTime");
- my $to = param("toTime");
- my $stock = param("symbol");
- my @results = `./get_data.pl --from='$from' --to='$to' --close --plot $stock`;
- print @results;
-}
+#sub PlotHistory{
+# my $from = param("fromTime");
+# my $to = param("toTime");
+# my $stock = param("symbol");
+# my @results = `./get_data.pl --from='$from' --to='$to' --close --plot $stock`;
+# print @results;
+#}
 
-sub PlotHistoryA{
-  
-  my $close=1;
-
-  my $notime=0;
-  my $open=0;
-  my $high=0;
-  my $low=0;
-   $close=0;
-  my $vol=0;
-  my $from="1/1/99";
-  my $to="12/31/00";
-  my $plot=1;
-
-  #&GetOptions( "notime"=>\$notime,
-#			   "open" => \$open,
-#			   "high" => \$high,
-#			   "low" => \$low,
-#			   "close" => \$close,
-#			   "vol" => \$vol,
-#			   "from=s" => \$from,
-#			   "to=s" => \$to, "plot" => \$plot);
-
-  if (defined $from) { $from=parsedate($from); }
-  if (defined $to) { $to=parsedate($to); }
-
-
-  my $usage = "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=time] [--to=time] [--plot] SYMBOL\n";
-
-  #$#ARGV == 0 or die $usage;
-
-  my $symbol = param("name");
-  $close = 1;
-  
-  my @fields;
-
-  push @fields, "timestamp" if !$notime;
-  push @fields, "open" if $open;
-  push @fields, "high" if $high;
-  push @fields, "low" if $low;
-  push @fields, "close" if $close;
-  push @fields, "volume" if $vol;
-
-$symbol = "AAPL";
-  my $sql;
-
-  $sql = "select " . join(",",@fields) . " from ".GetStockPrefix()."StocksDaily";
-  $sql = "select " . join(",",@fields) . " from ".GetStockPrefix()."StocksDaily";
-  $sql.= " where symbol = '$symbol'";
-  $sql.= " and timestamp >= $from" if $from;
-  $sql.= " and timestamp <= $to" if $to;
-  $sql.= " order by timestamp";
-
-  my $data = ExecStockSQL("TEXT",$sql);
- print "</body>";
-  print "</html>";
-  if (!$plot) {
-	print $data;
-  } else {
-	open(DATA,">_plot.in") or die "Cannot open temporary file for plotting\n";
-	#print DATA $data;
-	close(DATA);
-	
-	open(GNUPLOT, "|gnuplot") or die "Cannot open gnuplot for plotting\n";
-	print GNUPLOT "set term png\n"; 
-	print GNUPLOT "set output\n";
-	
-	#GNUPLOT->autoflush(1);
-	print GNUPLOT "set title '$symbol'\nset xlabel 'time'\nset ylabel 'data'\n";
-	print GNUPLOT "plot '_plot.in' with linespoints;\n";
-	print GNUPLOT "e\n";
-	close(GNUPLOT);
-  }
-}
