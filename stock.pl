@@ -40,7 +40,10 @@ if (defined param("name")){
  else{
 	$stockName=param("stock");
  }
-my $portName = param("port");
+my $portName;
+if (defined param("port")){
+   $portName = param("port");
+}
 my $action;
 my $run;
 if (defined(param("act"))) { 
@@ -185,14 +188,19 @@ print "<footer style=\"bottom:0;
 print end_html;
 
 sub UpdateDaily{
-  my $symbol = param("stock"); 
-  print $symbol;
-  #my ($symbol) = @_; 
+  my $symbol;
+  if (defined param("name")){
+	$symbol = param("name");
+  }
+  else{
+	$symbol=param("stock");
+  } 
   my @info=("time", "open", "high", "low", "close","volume");
   my @values = (); 
   my $con=Finance::Quote->new();
   $con->timeout(60);
   my %quotes = $con->fetch("usa",$symbol); 
+  my $time;
   if (!defined($quotes{$symbol,"success"})) { 
         print "No Data\n";
    } else {
@@ -200,7 +208,7 @@ sub UpdateDaily{
         if (defined($quotes{$symbol,$key})) {
                 if ($key eq "time"){    
                   my $temptime = $quotes{$symbol, $key};
-                  my $time = UnixDate($temptime, "%s");
+                  $time = UnixDate($temptime, "%s");
                   push(@values, $time);
                 }else{
                 my $temp = $quotes{$symbol,$key};
@@ -216,8 +224,24 @@ sub UpdateDaily{
         #print "$index: ";
         #print "$values[$index]\n";
    }   
+   my $count = ExecStockSQL("TEXT", "select count(symbol) from stockssymbolsaddon where symbol=rpad(?, 16)", $symbol);
    my $sql = "insert into stocksdailyaddon values(\'$symbol\',?,?,?,?,?,?)";
    eval{ExecStockSQL(undef, $sql, @values)};
+   if ($@){
+	print $@;
+   }else{
+	if ($count == 0){
+	  $count=$count+1;
+	  $sql = "insert into stockssymbolsaddon values(\'$symbol\',\'$count\',\'0\',\'$time\')";
+	  eval{ExecStockSQL(undef, $sql)};
+	}else{
+	  $count = $count + 1;
+	  $sql = "update stockssymbolsaddon set count=? where symbol=rpad(?, 16)";
+	  eval{ExecStockSQL(undef, $sql, $count, $symbol)};
+	  $sql = "update stockssymbolsaddon set last=? where symbol=rpad(?, 16)";
+	  eval{ExecStockSQL(undef, $sql, $time, $symbol)};
+	}
+}
    return $@; 
 }
 
