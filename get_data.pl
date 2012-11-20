@@ -32,11 +32,12 @@ if (defined $from) { $from=parsedate($from); }
 if (defined $to) { $to=parsedate($to); }
 
 
-$usage = "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=time] [--to=time] [--plot] SYMBOL\n";
+$usage = "usage: get_data.pl [--open] [--high] [--low] [--close] [--vol] [--from=time] [--to=time] [--plot] SYMBOL DAYS\n";
 
-$#ARGV == 0 or die $usage;
+#$#ARGV == 0 or die $usage;
 
 $symbol = shift;
+$days = shift;
 
 push @fields, "timestamp" if !$notime;
 push @fields, "open" if $open;
@@ -47,6 +48,7 @@ push @fields, "volume" if $vol;
 
 
 my $sql;
+
 
 $sql = "select " . join(",",@fields) . " from ".GetStockPrefix()."StocksDaily";
 $sql.= " where symbol = '$symbol'";
@@ -65,7 +67,7 @@ if (!$plot) {
   open(GNUPLOT, "|gnuplot") or die "Cannot open gnuplot for plotting\n";
   GNUPLOT->autoflush(1);
 print GNUPLOT "set term png\n";
-print GNUPLOT "set output \"$symbol.png\"\n";
+print GNUPLOT "set output \"$symbol$days.png\"\n";
 
   print GNUPLOT "set title '$symbol'\nset xlabel 'time'\nset ylabel 'data'\n";
   print GNUPLOT "plot '_plot.in' with linespoints;\n";

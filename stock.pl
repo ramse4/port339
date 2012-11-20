@@ -171,7 +171,7 @@ if (!$run){
  if ($action eq "predict"){
     my $stock = param("symbol");
     my $days = param("days");
-    my $stockFile = "$stock.png"; 
+    my $stockFile = "$stock$days.png"; 
     my $predictor = `./time_series_symbol_project.pl $stock $days AWAIT 200 AR 16`;
     #print $predictor;
     #die $stockFile;
