@@ -64,6 +64,7 @@ my $cookiename="PortSession";
 my $withdraw;
 my $deposit;
 my $amount;
+my $depaccount;
 
 if (defined(param("withdraw"))) { 
     $withdraw = param("withdraw") == 1;
@@ -79,6 +80,13 @@ if (defined(param("deposit"))) {
 } 
 else {
       $deposit = 0;
+}
+
+if (defined(param("account"))){
+  $depaccount = param("account");
+}
+else{
+  $depaccount = 0;
 }
 
 
@@ -108,8 +116,27 @@ if($withdraw){
   }
 }
 elsif($deposit){
-
-  depositCash($id, $amount);
+  if ($depaccount){
+    my @accID = getPortID($user, $depaccount);
+    my $accid= $accID[0];
+    my @accmoney= getCash($accid);
+    my $cash2 = $accmoney[0];
+    if ($cash2 > $amount){
+      my $error1 =withdrawCash($accid, $amount);
+      if($error1){
+        $error = $error1;
+      }
+      else{
+         depositCash($id, $amount);
+      }
+    }
+    else{
+      $error = "Cannot withdraw more money than in cash account";
+    }
+  }
+  else{
+    depositCash($id, $amount);
+  }
 }
 
 my $symbol;
@@ -281,7 +308,9 @@ print start_form(-name=>"Deposit"), "<br/>",
 	hidden(-name=>'deposit',default=>['1']),
   hidden(-name=>'name',default=>['$port']),
   "\$", textfield(-name=>'amount2'),
-  submit(-class=>'btn', -name=>'Deposit'),
+  submit(-class=>'btn', -name=>'Deposit'),p,
+  " &nbsp;&nbsp; &nbsp;&nbsp;OPTIONAL Account to withdraw from:", textfield(-name=>'account'),
+  
 	end_form;
 
 
