@@ -65,7 +65,7 @@ if (!$plot) {
   open(GNUPLOT, "|gnuplot") or die "Cannot open gnuplot for plotting\n";
   GNUPLOT->autoflush(1);
 print GNUPLOT "set term png\n";
-print GNUPLOT "set output \"predictFile.png\"\n";
+print GNUPLOT "set output \"$symbol.png\"\n";
 
   print GNUPLOT "set title '$symbol'\nset xlabel 'time'\nset ylabel 'data'\n";
   print GNUPLOT "plot '_plot.in' with linespoints;\n";

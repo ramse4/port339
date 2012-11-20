@@ -171,10 +171,11 @@ if (!$run){
  if ($action eq "predict"){
     my $stock = param("symbol");
     my $days = param("days");
-    
+    my $stockFile = "$stock.png"; 
     my $predictor = `./time_series_symbol_project.pl $stock $days AWAIT 200 AR 16`;
     #print $predictor;
-    print "<b>Future Predictions</b><p><img src =\"predictFile.png\"><p>\n";
+    #die $stockFile;
+    print "<b>Future Predictions</b><p><img src =\'$stockFile\'><p>\n";
     print "<a href=\"stock.pl?port=$portName&stock=$stock\"> Back</a>";
   }
 }
