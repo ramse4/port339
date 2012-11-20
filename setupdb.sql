@@ -45,7 +45,9 @@ create table holdings
  foreign key (PORTFOLIOID) references portfolios 
 );
 
+create view stocksdaily as select * from cs339.stocksdaily union all select * from stocksdailyaddon;
 
+create view stockssymbols as select * from cs339.stockssymbols union all select * from stockssymbolsaddon;
 
 
 --increments portfolio id with each insert
