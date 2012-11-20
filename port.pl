@@ -138,7 +138,6 @@ elsif($deposit){
     depositCash($id, $amount);
   }
 }
-
 my $symbol;
 my $shares;
 my $invalidNumber = 0;
