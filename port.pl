@@ -114,28 +114,103 @@ elsif($deposit){
 
 my $symbol;
 my $shares;
+my $invalidNumber = 0;
+my $invalidSymbol = 0;
+my $insufFunds = 0;
+my $notOwned = 0;
 
 if (defined(param("symbol")) and defined(param("shares"))){
-	$symbol = param("symbol");
+        $symbol = uc (param("symbol"));
 	$shares = param("shares");
+	if(!($shares =~ /^\s*[0-9]+/)) {
+	  $invalidNumber = 1;
+	}
+	else {
+	  my @findSymbol = ExecStockSQL("ROW", "select count(symbol) from stockssymbols where symbol=rpad(?,16)", $symbol);
+	  if(!$findSymbol[0]) {
+	    $invalidSymbol = 1;
+	  }
+          else {
 
-	ExecStockSQL(undef, "insert into holdings values(?, ?, ?)", $symbol, $id, $shares);
+
+	    my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from stocksdaily where timestamp=(select MAX(last) from stockssymbols where symbol=rpad(?, 16)) and symbol=rpad(?, 16)",$symbol, $symbol);
+	    };
+
+	    my $price = $stockinfo[1];
+	    if($price * $shares <= $money[0]) {
+	      withdrawCash($id, $price * $shares);
 
 
-	my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $symbol, $symbol, $symbol);
-	};
+	      @stockinfo = ExecStockSQL("ROW", "select count from holdings where symbol=rpad(?,16) and portfolioid=?", $symbol, $id);
 
 
-	my $price = $stockinfo[1];
-	withdrawCash($id, $price * $shares);
-      }
+	      if(not (@stockinfo)) {
+
+		ExecStockSQL(undef, "insert into holdings values(?, ?, ?)", $symbol, $id, $shares);
+	      }
+	      else {
+		ExecStockSQL(undef, "update holdings set count=? where symbol=rpad(?,16) and portfolioid=?", $stockinfo[0] + $shares, $symbol, $id);
+	      }
+	    }
+	    else {
+	      $insufFunds = 1;
+	    }
+	  }
+	}
+}
+
+
+if (defined(param("sellsymbol")) and defined(param("shares"))){
+  $symbol = uc(param("sellsymbol"));
+  $shares = param("shares");
+
+  if(!($shares =~ /^\s*[0-9]+/)) {
+    $invalidNumber = 1;
+  }
+  else {
+    my @findSymbol = ExecStockSQL("ROW", "select symbol, count from holdings where symbol=rpad(?,16) and portfolioid=?", $symbol, $id);
+    if(!$findSymbol[0] or $findSymbol[1] < $shares) {
+      $notOwned = 1;
+    }
+    elsif($findSymbol[1] == $shares) {
+      ExecStockSQL(undef, "delete from holdings where symbol=rpad(?,16) and portfolioid=?", $symbol, $id);
+      
+      my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from stocksdaily where timestamp=(select MAX(last) from stockssymbols where symbol=rpad(?, 16)) and symbol=rpad(?, 16)",$symbol, $symbol);
+      };
+      
+      
+      my $price = $stockinfo[1];
+      depositCash($id, $price * $shares);
+    }
+    else {
+      ExecStockSQL(undef, "update holdings set count=? where symbol=rpad(?,16) and portfolioid=?", $findSymbol[1] - $shares, $symbol, $id);
+
+
+      my @stockinfo = eval {ExecStockSQL("ROW", "select symbol, close, timestamp from stocksdaily where timestamp=(select MAX(last) from stockssymbols where symbol=rpad(?, 16)) and symbol=rpad(?, 16)",$symbol, $symbol);
+      };
+      
+      
+      my $price = $stockinfo[1];
+      depositCash($id, $price * $shares);
+
+    
+    }
+  }
+}
+
+
 
 
 
 
 if (defined($user)){
   if ($deposit or $withdraw or ($symbol and $shares)){
-    print redirect(-uri=>'port.pl?name='.$port);
+    my $uri = 'port.pl?name='.$port;
+    if($invalidNumber) { $uri = $uri . "&invalidNum=" . $invalidNumber; }
+    if($invalidSymbol) { $uri = $uri . "&invalidSym=" . $invalidSymbol; }
+    if($insufFunds) { $uri = $uri . "&insufFund=" . $insufFunds; }
+    if($notOwned) { $uri = $uri . "&notOwned=" . $notOwned; }
+    print redirect(-uri=>$uri);
   }
   print header();
 }
@@ -160,6 +235,23 @@ print "<div style=\"position:absolute;top:0;
   "<a href=\"login.pl?logout=1\"><strong>Logout</strong> </a>",
   "</div>";
 
+if(defined(param("invalidNum")) and param("invalidNum") eq "1") {
+  print "<script type=\"text/javascript\"> alert('Invalid entry: must be a positive integer');</script>";
+
+}
+
+if(defined(param("invalidSym")) and param("invalidSym") eq "1") {
+  print "<script type=\"text/javascript\"> alert('Invalid entry: Stock symbol not found');</script>";
+
+}
+
+if(defined(param("insufFund")) and param("insufFund") eq "1") {
+  print "<script type=\"text/javascript\"> alert('Insufficient funds.');</script>";
+}
+
+if(defined(param("notOwned")) and param("notOwned") eq "1") {
+  print "<script type=\"text/javascript\"> alert('You do not have enough of that stock to sell.');</script>";
+}
 
 print "<div class=\"container\" style=\"background-color:#eeeee0; 
 	margin:100px auto; width:800px; padding:10px;\">";
@@ -196,7 +288,7 @@ print start_form(-name=>"Deposit"), "<br/>",
 
 #area to place adding stocks functionality
 #probably want a form(start_form/end_form/submit btn)
-print hr, "<strong><u>Add Stock:</u></strong>",p,
+print hr, "<strong><u>Buy Stock:</u></strong>",p,
       start_form, 
       "symbol:", textfield(-name=>'symbol'),p,
       "shares:", textfield(-name=>'shares'),p,
@@ -204,9 +296,16 @@ print hr, "<strong><u>Add Stock:</u></strong>",p,
       submit(-class=>'btn', -name=> 'Add Stock'),
       end_form;
 
+print hr, "<strong><u>Sell Stock:</u></strong>",p,
+      start_form,
+      "symbol:", textfield(-name=>'sellsymbol'),p,
+      "shares:", textfield(-name=>'shares'),p,
+      hidden(-name=>'name',default=>['$port']),
+      submit(-class=>'btn', -name=> 'Sell Stock'),
+      end_form;
+
 print hr, "<strong><u>Stocks:</u></strong>", p;
 
-##this is canned...needs stocks to actually be gotten with their info 
 print "<table class=\"table\" style=\"background-color:white\"> <tbody>";
 #can changed layout of table as you wish also porbably want to print in each stock page as well
 print "<th>sym</th><th>market value</th><th># of shares</th><th>cov</th><th>Beta</th>";
@@ -221,7 +320,7 @@ for (my $i = 0; $i < @stocks; $i++) {
     my $s = @{$stock}[0];
     push(@stocksymbols, $s);
     my $s2 = @{$stock}[1];
-    my @stockInfo = ExecStockSQL("ROW", "select symbol, close, timestamp from (select symbol, close, timestamp from cs339.stocksdaily union all select symbol, close, timestamp from stocksdailyaddon) where timestamp=(select MAX(last) from (select last from cs339.stockssymbols where symbol=rpad(?,16) union all select last from stockssymbolsaddon where symbol=rpad(?,16))) and symbol=rpad(?, 16)", $s, $s, $s);
+    my @stockInfo = ExecStockSQL("ROW", "select symbol, close, timestamp from stocksdaily where timestamp=(select MAX(last) from stockssymbols where symbol=rpad(?, 16)) and symbol=rpad(?, 16)", $s, $s);
 
     my $value = $stockInfo[1];
     $portValue += $value * $s2;
