@@ -55,7 +55,7 @@ print "<style type=\"text/css\">\n\@import \"port.css\";\n</style>\n";
 
 if ($view eq "sbfc"){
 	print h3("Storyboard/Flowcharts"),
-		img({-src => 'cow.jpg',  
+		img({-src => 'flowchart.jpg',  
    		-alt => 'Cannot find image'});
 }
 if ($view eq "er"){
@@ -88,7 +88,7 @@ if ($view eq "sqldmldql"){
 	print "</pre>";
 	close(file);
 }
-print "<footer style=\"position:absolute;bottom:0;
+print "<footer style=\"position:fixed;bottom:0;
 	width:100\%; height:30px; background-color:#000000;\">",
 	"<a href=\"login.pl\"><strong>Return to Login/Portfolio</strong> </a>",
 	"</footer>";
