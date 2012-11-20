@@ -37,7 +37,7 @@ my $stockName;
 if (defined param("name")){
 	$stockName = param("name");
  }
- else{
+ elsif(defined param("stock")){
 	$stockName=param("stock");
  }
 my $portName;
@@ -90,6 +90,7 @@ if (!$run){
 	    hidden(-name=>'symbol',-default=>[$stockName]),
 	    hidden(-name=>'run',-default=>['1']),
 	    hidden(-name=>'act',-default=>['shannon']),
+      hidden(-name=>'port',-default=>[$portName]),
             submit(-class=>'btn', -name=>'Submit'), "</center>",
       end_form; 
   print "</td></tr>";
@@ -101,6 +102,7 @@ if (!$run){
 	    hidden(-name=>'symbol',-default=>[$stockName]),
 	    hidden(-name=>'run',-default=>['1']),
 	    hidden(-name=>'act',-default=>['predict']),
+      hidden(-name=>'port',-default=>[$portName]),
             submit(-class=>'btn', -name=>'Submit'), "</center>",
       end_form; 
   print "</td></tr>";
@@ -112,6 +114,7 @@ if (!$run){
         "To Date: ", textfield(-name=>'toTime'),"<br/>", 
 	  hidden(-name=>'symbol',-default=>[$stockName]),
 	  hidden(-name=>'type',-default=>['plot']),
+    hidden(-name=>'port',-default=>[$portName]),
 	  #hidden(-name=>'act',-default=>['plot']),
 	  #hidden(-name=>'run',-default=>['1']),
 	  #hidden(-name=>'act',-default=>['plot']),
@@ -132,7 +135,8 @@ if (!$run){
 	  print "<tr><td>";
 	  print start_form,
 		   submit (-name=>'backToPort', -value=>'Back'),"<br/>",
-		   hidden(-name=>'name',-default=>[$stockName]),
+		   hidden(-name=>'stock',-default=>[$stockName]),
+       hidden(-name=>'port',-default=>[$portName]),
 		  end_form;
 	  print "</td></tr>";
 	  print "</tbody></table>";
@@ -159,10 +163,7 @@ if (!$run){
     }
     print "</td></tr>";
     print "<tr><td>";
-    print start_form,
-      submit (-name=>'backToStock', -value=>'Back'),"<br/>",
-       hidden(-name=>'name',-default=>[$stockName]),
-        end_form;
+    print "<a href=\"stock.pl?port=$portName&stock=$stock\"> Back</a>";
     print "</td></tr>";
     print "</tbody></table>";
 
@@ -174,10 +175,7 @@ if (!$run){
     my $predictor = `./time_series_symbol_project.pl $stock $days AWAIT 200 AR 16`;
     #print $predictor;
     print "<b>Future Predictions</b><p><img src =\"predictFile.png\"><p>\n";
-    print start_form,
-      submit (-name=>'backToStock', -value=>'Back'),"<br/>",
-       hidden(-name=>'name',-default=>[$stockName]),
-        end_form;
+    print "<a href=\"stock.pl?port=$portName&stock=$stock\"> Back</a>";
   }
 }
 
