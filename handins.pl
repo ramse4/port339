@@ -79,7 +79,7 @@ if ($view eq "sqlddl"){
 	close(file);
 }
 if ($view eq "sqldmldql"){
-	open FILE, "elect.sql" or die $!;
+	open FILE, "dml.sql" or die $!;
 	print h3("SQL DML/DQL");
 	print "<pre class=\"pre-scrollable\">";
 	while (<FILE>) {
