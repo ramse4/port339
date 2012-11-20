@@ -1,3 +1,7 @@
+drop view stockssymbols;
+
+drop view stocksdaily;
+
 drop table stockssymbolsaddon; 
 
 drop table stocksdailyaddon;
