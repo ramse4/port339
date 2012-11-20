@@ -26,6 +26,7 @@ $steps=shift;
 $model=join(" ",@ARGV);
 
 
-system "get_data.pl --notime --close $symbol $steps --plot > _data.in";
-system "time_series_project _data.in $steps $model 2>/dev/null";
+system "get_data.pl --notime --close $symbol $steps > _data.in";
+system "time_series_project _data.in $steps $model > _project.in";
+system "get_data.pl --notime --close $symbol $steps --plot 2> /dev/null";
 

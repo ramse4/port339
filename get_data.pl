@@ -59,9 +59,16 @@ my $data = ExecStockSQL("TEXT",$sql);
 if (!$plot) { 
   print $data;
 } else {
+    open(FILE, "<_project.in") or die "Cant open _project.in\n";
+    local $/ = undef;
+    $lines = <FILE>;
+    close(FILE);
 
   open(DATA,">_plot.in") or die "Cannot open temporary file for plotting\n";
   print DATA $data;
+  while ($lines =~ m/.*\t0\.000000\t([-+]?[0-9]*\.?[0-9]*)/g){
+   print DATA $1 . "\n";
+  }
   close(DATA);
 
   open(GNUPLOT, "|gnuplot") or die "Cannot open gnuplot for plotting\n";
