@@ -1,4 +1,0 @@
-export PORTF_DBMS='oracle'
-export PORTF_DB='cs339'
-export PORTF_DBUSER='ahj777'
-export PORTF_DBPASS='ehJm7Cf0'
